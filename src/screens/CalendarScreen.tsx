@@ -1,9 +1,9 @@
 // src/screens/CalendarScreen.tsx
 
 import React from 'react';
-import { View } from 'react-native';
-// MarkedDates를 import 목록에서 제거합니다.
-import { Calendar, LocaleConfig } from 'react-native-calendars';
+import { View, Alert } from 'react-native';
+// LocaleConfig import를 제거합니다.
+import { Calendar, DateData } from 'react-native-calendars';
 import { useMissions } from '../context/MissionContext';
 
 // 달력에 표시할 날짜 객체의 타입을 직접 정의합니다.
@@ -11,65 +11,45 @@ type CustomMarkedDates = {
   [key: string]: {
     selected: boolean;
     selectedColor: string;
+    dotColor?: string;
+    marked?: boolean;
   };
 };
 
-// 달력 한글 설정
-LocaleConfig.locales['kr'] = {
-  monthNames: [
-    '1월',
-    '2월',
-    '3월',
-    '4월',
-    '5월',
-    '6월',
-    '7월',
-    '8월',
-    '9월',
-    '10월',
-    '11월',
-    '12월',
-  ],
-  monthNamesShort: [
-    '1월',
-    '2월',
-    '3월',
-    '4월',
-    '5월',
-    '6월',
-    '7월',
-    '8월',
-    '9월',
-    '10월',
-    '11월',
-    '12월',
-  ],
-  dayNames: [
-    '일요일',
-    '월요일',
-    '화요일',
-    '수요일',
-    '목요일',
-    '금요일',
-    '토요일',
-  ],
-  dayNamesShort: ['일', '월', '화', '수', '목', '금', '토'],
-  today: '오늘',
-};
-LocaleConfig.defaultLocale = 'kr';
+// --- 여기 있던 LocaleConfig 관련 코드를 모두 삭제합니다. ---
 
 function CalendarScreen() {
-  const { completedDates } = useMissions();
+  const { missions } = useMissions();
 
-  // 우리가 직접 만든 CustomMarkedDates 타입을 사용합니다.
-  const markedDates = completedDates.reduce((acc, date) => {
-    acc[date] = { selected: true, selectedColor: '#6200EE' };
+  const markedDates = Object.keys(missions).reduce((acc, date) => {
+    const missionData = missions[date];
+    if (missionData.completed) {
+      acc[date] = { selected: true, selectedColor: '#6200EE' };
+    }
+    if (missionData.diary) {
+      acc[date] = { ...acc[date], marked: true, dotColor: 'orange' };
+    }
     return acc;
-  }, {} as CustomMarkedDates); // <-- 여기를 CustomMarkedDates로 변경!
+  }, {} as CustomMarkedDates);
+
+  const handleDayPress = (day: DateData) => {
+    const missionData = missions[day.dateString];
+    if (missionData) {
+      const missionText = missionData.mission
+        ? `- 미션: ${missionData.mission}`
+        : '- 완료된 미션이 없어요.';
+      const diaryText = missionData.diary
+        ? `\n- 일기: ${missionData.diary} ${missionData.mood}`
+        : '\n- 작성된 일기가 없어요.';
+      Alert.alert(day.dateString, missionText + diaryText);
+    } else {
+      Alert.alert(day.dateString, '이 날은 기록이 없어요.');
+    }
+  };
 
   return (
     <View style={{ paddingTop: 50, flex: 1, backgroundColor: 'white' }}>
-      <Calendar markedDates={markedDates} />
+      <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
     </View>
   );
 }

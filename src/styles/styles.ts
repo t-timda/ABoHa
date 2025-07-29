@@ -48,4 +48,37 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  diaryContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingTop: 50,
+    width: '100%',
+  },
+  moodContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '80%',
+    marginBottom: 30,
+  },
+  moodButton: {
+    padding: 10,
+    borderRadius: 50,
+  },
+  selectedMood: {
+    backgroundColor: '#e0e0e0',
+  },
+  moodText: {
+    fontSize: 30,
+  },
+  textInput: {
+    width: '90%',
+    height: 150,
+    borderColor: '#e0e0e0',
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 15,
+    textAlignVertical: 'top',
+    fontSize: 16,
+    marginBottom: 20,
+  },
 });

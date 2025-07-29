@@ -8,13 +8,14 @@ import {
   SafeAreaView,
   Alert,
 } from 'react-native';
-import { useMissions } from '../context/MissionContext'; // useMissions 훅 불러오기
+import { useMissions } from '../context/MissionContext';
 import { MISSIONS } from '../data/missions';
 import { styles } from '../styles/styles';
 
 function HomeScreen() {
   const [todayMission, setTodayMission] = useState('');
-  const { addCompletedDate } = useMissions(); // 보관함에서 날짜 추가 함수 가져오기
+  // 이제 addCompletedDate 대신 completeMission 함수를 가져옵니다.
+  const { completeMission } = useMissions();
 
   useEffect(() => {
     const randomIndex = Math.floor(Math.random() * MISSIONS.length);
@@ -22,9 +23,10 @@ function HomeScreen() {
   }, []);
 
   const handleCompleteMission = () => {
-    const today = new Date().toISOString().split('T')[0]; // 오늘 날짜 'YYYY-MM-DD' 형식으로 구하기
-    addCompletedDate(today);
-    Alert.alert('참 잘했어요!', '오늘의 미션을 성공적으로 마쳤습니다.'); // 성공 알림창
+    const today = new Date().toISOString().split('T')[0];
+    // 날짜와 함께 오늘의 미션 내용도 함께 저장합니다.
+    completeMission(today, todayMission);
+    Alert.alert('참 잘했어요!', '오늘의 미션을 성공적으로 마쳤습니다.');
   };
 
   return (
@@ -36,12 +38,9 @@ function HomeScreen() {
             일상 속에서 잊고 지낸 소중한 순간
           </Text>
         </View>
-
         <View style={styles.missionContainer}>
           <Text style={styles.missionText}>{todayMission}</Text>
         </View>
-
-        {/* onPress에 handleCompleteMission 함수를 연결합니다. */}
         <TouchableOpacity
           style={styles.completeButton}
           onPress={handleCompleteMission}

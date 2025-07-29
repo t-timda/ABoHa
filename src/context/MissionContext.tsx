@@ -2,34 +2,65 @@
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 
-// Context가 가지게 될 값들의 타입 정의
-interface MissionContextType {
-  completedDates: string[];
-  addCompletedDate: (date: string) => void;
+// 날짜별로 저장될 데이터의 타입 정의
+export interface DayData {
+  completed: boolean;
+  mission: string;
+  diary?: string;
+  mood?: string;
 }
 
-// Context 생성 (기본값은 undefined)
+// 전체 데이터 구조의 타입 정의
+interface MissionData {
+  [date: string]: DayData;
+}
+
+// Context가 가지게 될 값들의 타입 정의
+interface MissionContextType {
+  missions: MissionData;
+  completeMission: (date: string, mission: string) => void;
+  saveDiary: (date: string, diary: string, mood: string) => void;
+}
+
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
 
-// 다른 컴포넌트들을 감싸서 Context를 제공할 Provider 컴포넌트
 export const MissionProvider = ({ children }: { children: ReactNode }) => {
-  const [completedDates, setCompletedDates] = useState<string[]>([]);
+  const [missions, setMissions] = useState<MissionData>({});
 
-  const addCompletedDate = (date: string) => {
-    // 이미 추가된 날짜는 다시 추가하지 않음
-    if (!completedDates.includes(date)) {
-      setCompletedDates(prevDates => [...prevDates, date]);
-    }
+  // 미션 완료 시 실행될 함수
+  const completeMission = (date: string, mission: string) => {
+    setMissions(prev => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        completed: true,
+        mission: mission,
+      },
+    }));
+  };
+
+  // 일기 저장 시 실행될 함수
+  const saveDiary = (date: string, diary: string, mood: string) => {
+    setMissions(prev => ({
+      ...prev,
+      [date]: {
+        ...prev[date],
+        diary: diary,
+        mood: mood,
+        // 미션을 완료하지 않고 일기만 쓸 수도 있으므로, completed와 mission은 기존 값을 유지하거나 새로 생성
+        completed: prev[date]?.completed || false,
+        mission: prev[date]?.mission || '',
+      },
+    }));
   };
 
   return (
-    <MissionContext.Provider value={{ completedDates, addCompletedDate }}>
+    <MissionContext.Provider value={{ missions, completeMission, saveDiary }}>
       {children}
     </MissionContext.Provider>
   );
 };
 
-// 다른 컴포넌트에서 쉽게 Context를 사용하게 해줄 커스텀 훅
 export const useMissions = () => {
   const context = useContext(MissionContext);
   if (context === undefined) {

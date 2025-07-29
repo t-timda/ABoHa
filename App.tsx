@@ -19,7 +19,7 @@ function App(): React.JSX.Element {
         <Tab.Navigator
           initialRouteName="메인"
           screenOptions={{
-            headerTitle: '아보하',
+            headerTitle: '아보하 : 아주 보통의 하루',
             headerTitleAlign: 'center',
           }}
         >
