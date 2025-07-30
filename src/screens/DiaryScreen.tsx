@@ -1,6 +1,6 @@
 // src/screens/DiaryScreen.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // useEffect 추가
 import {
   Text,
   View,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { styles } from '../styles/styles';
 import { useMissions } from '../context/MissionContext';
-import { useNavigation } from '@react-navigation/native'; // 화면 이동을 위한 훅
+import { useNavigation } from '@react-navigation/native';
 
 const MOODS = ['😊', '🙂', '😐', '😢', '😠'];
 
@@ -19,10 +19,35 @@ function DiaryScreen() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [diaryText, setDiaryText] = useState('');
 
-  const { saveDiary } = useMissions(); // 보관함에서 일기 저장 함수 가져오기
-  const navigation = useNavigation(); // 내비게이션 기능 사용
+  const { missions, saveDiary } = useMissions();
+  const navigation = useNavigation();
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const today = `${year}-${month}-${day}`;
+
+  const todaysDiary = missions[today]; // 오늘의 전체 기록을 가져옵니다.
+  const hasDiaryToday = !!todaysDiary?.diary; // 일기 작성 여부 확인
+
+  // --- 아래 useEffect 로직을 추가합니다 ---
+  // 화면이 보일 때마다, 그리고 저장된 데이터가 바뀔 때마다 실행
+  useEffect(() => {
+    if (hasDiaryToday) {
+      // 이미 작성된 일기가 있으면, 상태를 그 내용으로 채워줍니다.
+      setSelectedMood(todaysDiary.mood || null);
+      setDiaryText(todaysDiary.diary || '');
+    } else {
+      // 작성된 일기가 없으면, 상태를 깨끗하게 비웁니다.
+      setSelectedMood(null);
+      setDiaryText('');
+    }
+  }, [hasDiaryToday, missions]); // 의존성 배열에 hasDiaryToday, missions 추가
 
   const handleSave = () => {
+    if (hasDiaryToday) return;
+
     if (!selectedMood) {
       Alert.alert('알림', '오늘의 기분을 선택해주세요.');
       return;
@@ -32,13 +57,9 @@ function DiaryScreen() {
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
     saveDiary(today, diaryText, selectedMood);
 
-    // 키보드를 내리고, 상태 초기화 후 달력으로 이동
     Keyboard.dismiss();
-    setDiaryText('');
-    setSelectedMood(null);
     Alert.alert('저장 완료!', '오늘의 소중한 기록이 저장되었습니다.', [
       {
         text: '확인',
@@ -60,7 +81,8 @@ function DiaryScreen() {
               styles.moodButton,
               selectedMood === mood && styles.selectedMood,
             ]}
-            onPress={() => setSelectedMood(mood)}
+            onPress={() => !hasDiaryToday && setSelectedMood(mood)}
+            disabled={hasDiaryToday} // 비활성화 추가
           >
             <Text style={styles.moodText}>{mood}</Text>
           </TouchableOpacity>
@@ -68,13 +90,24 @@ function DiaryScreen() {
       </View>
       <TextInput
         style={styles.textInput}
-        placeholder="오늘 하루, 어떤 소중한 순간이 있었나요?"
-        value={diaryText}
+        placeholder={
+          hasDiaryToday
+            ? '오늘의 일기는 이미 작성되었어요.'
+            : '오늘 하루, 어떤 소중한 순간이 있었나요?'
+        }
+        value={diaryText} // 이제 이 값은 항상 동기화됩니다.
         onChangeText={setDiaryText}
+        editable={!hasDiaryToday}
         multiline
       />
-      <TouchableOpacity style={styles.completeButton} onPress={handleSave}>
-        <Text style={styles.buttonText}>기록하기</Text>
+      <TouchableOpacity
+        style={[styles.completeButton, hasDiaryToday && styles.disabledButton]}
+        onPress={handleSave}
+        disabled={hasDiaryToday}
+      >
+        <Text style={styles.buttonText}>
+          {hasDiaryToday ? '오늘도 아보하' : '기록하기'}
+        </Text>
       </TouchableOpacity>
     </View>
   );

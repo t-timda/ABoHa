@@ -3,27 +3,39 @@
 import { StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
-  safeArea: {
+  // --- 이 부분이 빠져있었습니다 ---
+  homeContainer: {
     flex: 1,
-    backgroundColor: 'white',
+  },
+  // ---
+  homeSafeArea: {
+    flex: 1,
   },
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+    backgroundColor: 'transparent',
   },
   customHeaderContainer: {
     alignItems: 'center',
-    paddingTop: 20,
+    paddingTop: 60,
   },
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
   },
   headerSubtitle: {
     fontSize: 14,
-    color: 'gray',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 5,
     marginTop: 8,
   },
   missionContainer: {
@@ -35,6 +47,10 @@ export const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: 'bold',
     textAlign: 'center',
+    color: 'white',
+    textShadowColor: 'rgba(0, 0, 0, 0.75)',
+    textShadowOffset: { width: -1, height: 1 },
+    textShadowRadius: 10,
   },
   completeButton: {
     backgroundColor: '#6200EE',
@@ -48,11 +64,15 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  disabledButton: {
+    backgroundColor: '#a9a9a9',
+  },
   diaryContainer: {
     flex: 1,
     alignItems: 'center',
     paddingTop: 50,
     width: '100%',
+    backgroundColor: 'white',
   },
   moodContainer: {
     flexDirection: 'row',
@@ -80,5 +100,15 @@ export const styles = StyleSheet.create({
     textAlignVertical: 'top',
     fontSize: 16,
     marginBottom: 20,
+    backgroundColor: 'white',
+  },
+  resetButton: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    backgroundColor: '#ff6347',
+    padding: 15,
+    borderRadius: 50,
+    elevation: 5,
   },
 });

@@ -1,45 +1,79 @@
 // src/context/MissionContext.tsx
 
-import React, { createContext, useState, useContext, ReactNode } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  ReactNode,
+  useEffect,
+} from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 날짜별로 저장될 데이터의 타입 정의
+// 타입 정의
 export interface DayData {
   completed: boolean;
   mission: string;
   diary?: string;
   mood?: string;
 }
-
-// 전체 데이터 구조의 타입 정의
 interface MissionData {
   [date: string]: DayData;
 }
-
-// Context가 가지게 될 값들의 타입 정의
 interface MissionContextType {
   missions: MissionData;
   completeMission: (date: string, mission: string) => void;
   saveDiary: (date: string, diary: string, mood: string) => void;
+  setDailyMission: (date: string, mission: string) => void;
+  resetToday: (date: string) => void;
+  isLoading: boolean;
 }
 
+// Context 생성
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
 
+const STORAGE_KEY = '@avoha_missions_data';
+
+// Provider 컴포넌트
 export const MissionProvider = ({ children }: { children: ReactNode }) => {
   const [missions, setMissions] = useState<MissionData>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // 미션 완료 시 실행될 함수
+  useEffect(() => {
+    const loadMissions = async () => {
+      try {
+        const savedMissions = await AsyncStorage.getItem(STORAGE_KEY);
+        if (savedMissions !== null) {
+          setMissions(JSON.parse(savedMissions));
+        }
+      } catch (e) {
+        console.error('Failed to load missions.', e);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadMissions();
+  }, []);
+
+  useEffect(() => {
+    const saveMissions = async () => {
+      if (!isLoading) {
+        try {
+          await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(missions));
+        } catch (e) {
+          console.error('Failed to save missions.', e);
+        }
+      }
+    };
+    saveMissions();
+  }, [missions, isLoading]);
+
   const completeMission = (date: string, mission: string) => {
     setMissions(prev => ({
       ...prev,
-      [date]: {
-        ...prev[date],
-        completed: true,
-        mission: mission,
-      },
+      [date]: { ...prev[date], completed: true, mission: mission },
     }));
   };
 
-  // 일기 저장 시 실행될 함수
   const saveDiary = (date: string, diary: string, mood: string) => {
     setMissions(prev => ({
       ...prev,
@@ -47,20 +81,53 @@ export const MissionProvider = ({ children }: { children: ReactNode }) => {
         ...prev[date],
         diary: diary,
         mood: mood,
-        // 미션을 완료하지 않고 일기만 쓸 수도 있으므로, completed와 mission은 기존 값을 유지하거나 새로 생성
         completed: prev[date]?.completed || false,
         mission: prev[date]?.mission || '',
       },
     }));
   };
 
+  const setDailyMission = (date: string, mission: string) => {
+    setMissions(prev => {
+      if (!prev[date] || !prev[date].mission) {
+        return {
+          ...prev,
+          [date]: {
+            completed: prev[date]?.completed || false,
+            mission: mission,
+          },
+        };
+      }
+      return prev;
+    });
+  };
+
+  const resetToday = (date: string) => {
+    setMissions(prev => {
+      const newMissions = { ...prev };
+      delete newMissions[date];
+      return newMissions;
+    });
+  };
+
   return (
-    <MissionContext.Provider value={{ missions, completeMission, saveDiary }}>
+    <MissionContext.Provider
+      value={{
+        missions,
+        completeMission,
+        saveDiary,
+        setDailyMission,
+        resetToday,
+        isLoading,
+      }}
+    >
       {children}
     </MissionContext.Provider>
   );
 };
 
+// --- 커스텀 훅 ---
+// 이 부분이 정상적으로 채워져 있어야 합니다.
 export const useMissions = () => {
   const context = useContext(MissionContext);
   if (context === undefined) {

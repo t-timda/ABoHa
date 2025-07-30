@@ -1,12 +1,12 @@
 // src/screens/CalendarScreen.tsx
 
 import React from 'react';
-import { View, Alert } from 'react-native';
-// LocaleConfig import를 제거합니다.
+import { View, Alert, TouchableOpacity, Text } from 'react-native';
+// LocaleConfig는 App.tsx로 옮겼으므로 여기서 import할 필요 없습니다.
 import { Calendar, DateData } from 'react-native-calendars';
 import { useMissions } from '../context/MissionContext';
+import { styles } from '../styles/styles';
 
-// 달력에 표시할 날짜 객체의 타입을 직접 정의합니다.
 type CustomMarkedDates = {
   [key: string]: {
     selected: boolean;
@@ -16,11 +16,10 @@ type CustomMarkedDates = {
   };
 };
 
-// --- 여기 있던 LocaleConfig 관련 코드를 모두 삭제합니다. ---
-
 function CalendarScreen() {
-  const { missions } = useMissions();
+  const { missions, resetToday } = useMissions();
 
+  // --- 제가 이전에 실수로 생략했던 부분입니다 ---
   const markedDates = Object.keys(missions).reduce((acc, date) => {
     const missionData = missions[date];
     if (missionData.completed) {
@@ -46,10 +45,28 @@ function CalendarScreen() {
       Alert.alert(day.dateString, '이 날은 기록이 없어요.');
     }
   };
+  // --- 여기까지 입니다 ---
+
+  const handleReset = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const today = `${year}-${month}-${day}`;
+
+    resetToday(today);
+    Alert.alert('초기화 완료', '오늘의 모든 기록이 삭제되었습니다.');
+  };
 
   return (
-    <View style={{ paddingTop: 50, flex: 1, backgroundColor: 'white' }}>
-      <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
+    <View style={{ flex: 1, backgroundColor: 'white' }}>
+      <View style={{ paddingTop: 50 }}>
+        <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
+      </View>
+
+      <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
+        <Text style={{ fontSize: 24 }}>🔄</Text>
+      </TouchableOpacity>
     </View>
   );
 }
