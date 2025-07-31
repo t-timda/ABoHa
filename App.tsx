@@ -1,9 +1,11 @@
 // App.tsx
 
 import React from 'react';
+import { SafeAreaView, View } from 'react-native';
 import { MissionProvider } from './src/context/MissionContext';
-import AppNavigator from './src/navigation/AppNavigator'; // 새로 만든 내비게이터 불러오기
+import AppNavigator from './src/navigation/AppNavigator';
 import { LocaleConfig } from 'react-native-calendars';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 // 달력 한글 설정
 LocaleConfig.locales['kr'] = {
@@ -49,12 +51,25 @@ LocaleConfig.locales['kr'] = {
 };
 LocaleConfig.defaultLocale = 'kr';
 
+// AdMob에서 발급받은 실제 광고 단위 ID로 교체합니다.
+const adUnitId = 'ca-app-pub-4780520831029688/3625246124';
+
 function App(): React.JSX.Element {
   return (
-    // MissionProvider가 AppNavigator를 감싸는 최종 구조
-    <MissionProvider>
-      <AppNavigator />
-    </MissionProvider>
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
+        <View style={{ flex: 1 }}>
+          <MissionProvider>
+            <AppNavigator />
+          </MissionProvider>
+        </View>
+
+        <BannerAd
+          unitId={adUnitId}
+          size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
