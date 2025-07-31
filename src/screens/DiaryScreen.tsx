@@ -1,6 +1,6 @@
 // src/screens/DiaryScreen.tsx
 
-import React, { useState, useEffect } from 'react'; // useEffect 추가
+import React, { useState, useEffect } from 'react';
 import {
   Text,
   View,
@@ -8,42 +8,40 @@ import {
   TextInput,
   Alert,
   Keyboard,
+  ImageBackground,
 } from 'react-native';
 import { styles } from '../styles/styles';
 import { useMissions } from '../context/MissionContext';
 import { useNavigation } from '@react-navigation/native';
+import { PANORAMA_IMAGES } from '../data/images';
 
 const MOODS = ['😊', '🙂', '😐', '😢', '😠'];
 
 function DiaryScreen() {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [diaryText, setDiaryText] = useState('');
-
   const { missions, saveDiary } = useMissions();
   const navigation = useNavigation();
 
+  const backgroundImage = PANORAMA_IMAGES[new Date().getDay()].right;
+
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const today = `${year}-${month}-${day}`;
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+    2,
+    '0',
+  )}-${String(now.getDate()).padStart(2, '0')}`;
+  const todaysDiary = missions[today];
+  const hasDiaryToday = !!todaysDiary?.diary;
 
-  const todaysDiary = missions[today]; // 오늘의 전체 기록을 가져옵니다.
-  const hasDiaryToday = !!todaysDiary?.diary; // 일기 작성 여부 확인
-
-  // --- 아래 useEffect 로직을 추가합니다 ---
-  // 화면이 보일 때마다, 그리고 저장된 데이터가 바뀔 때마다 실행
   useEffect(() => {
     if (hasDiaryToday) {
-      // 이미 작성된 일기가 있으면, 상태를 그 내용으로 채워줍니다.
       setSelectedMood(todaysDiary.mood || null);
       setDiaryText(todaysDiary.diary || '');
     } else {
-      // 작성된 일기가 없으면, 상태를 깨끗하게 비웁니다.
       setSelectedMood(null);
       setDiaryText('');
     }
-  }, [hasDiaryToday, missions]); // 의존성 배열에 hasDiaryToday, missions 추가
+  }, [hasDiaryToday, missions]);
 
   const handleSave = () => {
     if (hasDiaryToday) return;
@@ -69,46 +67,55 @@ function DiaryScreen() {
   };
 
   return (
-    <View style={styles.diaryContainer}>
-      <Text style={[styles.headerSubtitle, { marginBottom: 20, fontSize: 18 }]}>
-        오늘 하루는 어땠나요?
-      </Text>
-      <View style={styles.moodContainer}>
-        {MOODS.map(mood => (
-          <TouchableOpacity
-            key={mood}
-            style={[
-              styles.moodButton,
-              selectedMood === mood && styles.selectedMood,
-            ]}
-            onPress={() => !hasDiaryToday && setSelectedMood(mood)}
-            disabled={hasDiaryToday} // 비활성화 추가
-          >
-            <Text style={styles.moodText}>{mood}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-      <TextInput
-        style={styles.textInput}
-        placeholder={
-          hasDiaryToday
-            ? '오늘의 일기는 이미 작성되었어요.'
-            : '오늘 하루, 어떤 소중한 순간이 있었나요?'
-        }
-        value={diaryText} // 이제 이 값은 항상 동기화됩니다.
-        onChangeText={setDiaryText}
-        editable={!hasDiaryToday}
-        multiline
+    <View style={styles.homeContainer}>
+      <ImageBackground
+        source={backgroundImage}
+        style={styles.backgroundImageFullScreen}
       />
-      <TouchableOpacity
-        style={[styles.completeButton, hasDiaryToday && styles.disabledButton]}
-        onPress={handleSave}
-        disabled={hasDiaryToday}
-      >
-        <Text style={styles.buttonText}>
-          {hasDiaryToday ? '오늘도 아보하' : '기록하기'}
-        </Text>
-      </TouchableOpacity>
+      <View style={styles.diaryContainer}>
+        <View style={styles.diaryTitleContainer}>
+          <Text style={styles.diaryTitleText}>오늘 하루는 어땠나요?</Text>
+        </View>
+        <View style={styles.moodContainer}>
+          {MOODS.map(mood => (
+            <TouchableOpacity
+              key={mood}
+              style={[
+                styles.moodButton,
+                selectedMood === mood && styles.selectedMood,
+              ]}
+              onPress={() => !hasDiaryToday && setSelectedMood(mood)}
+              disabled={hasDiaryToday}
+            >
+              <Text style={styles.moodText}>{mood}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TextInput
+          style={styles.textInput}
+          placeholder={
+            hasDiaryToday
+              ? '오늘의 일기는 이미 작성되었어요.'
+              : '오늘 하루, 어떤 소중한 순간이 있었나요?'
+          }
+          value={diaryText}
+          onChangeText={setDiaryText}
+          editable={!hasDiaryToday}
+          multiline
+        />
+        <TouchableOpacity
+          style={[
+            styles.completeButton,
+            hasDiaryToday && styles.disabledButton,
+          ]}
+          onPress={handleSave}
+          disabled={hasDiaryToday}
+        >
+          <Text style={styles.buttonText}>
+            {hasDiaryToday ? '오늘도 아보하' : '기록하기'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }

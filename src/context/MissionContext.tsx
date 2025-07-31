@@ -9,7 +9,6 @@ import React, {
 } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 타입 정의
 export interface DayData {
   completed: boolean;
   mission: string;
@@ -24,16 +23,13 @@ interface MissionContextType {
   completeMission: (date: string, mission: string) => void;
   saveDiary: (date: string, diary: string, mood: string) => void;
   setDailyMission: (date: string, mission: string) => void;
-  resetToday: (date: string) => void;
   isLoading: boolean;
 }
 
-// Context 생성
 const MissionContext = createContext<MissionContextType | undefined>(undefined);
 
 const STORAGE_KEY = '@avoha_missions_data';
 
-// Provider 컴포넌트
 export const MissionProvider = ({ children }: { children: ReactNode }) => {
   const [missions, setMissions] = useState<MissionData>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -102,14 +98,6 @@ export const MissionProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const resetToday = (date: string) => {
-    setMissions(prev => {
-      const newMissions = { ...prev };
-      delete newMissions[date];
-      return newMissions;
-    });
-  };
-
   return (
     <MissionContext.Provider
       value={{
@@ -117,7 +105,6 @@ export const MissionProvider = ({ children }: { children: ReactNode }) => {
         completeMission,
         saveDiary,
         setDailyMission,
-        resetToday,
         isLoading,
       }}
     >
@@ -126,8 +113,6 @@ export const MissionProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// --- 커스텀 훅 ---
-// 이 부분이 정상적으로 채워져 있어야 합니다.
 export const useMissions = () => {
   const context = useContext(MissionContext);
   if (context === undefined) {

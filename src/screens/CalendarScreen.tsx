@@ -1,10 +1,17 @@
 // src/screens/CalendarScreen.tsx
 
 import React from 'react';
-import { View, Alert, TouchableOpacity, Text } from 'react-native';
-// LocaleConfig는 App.tsx로 옮겼으므로 여기서 import할 필요 없습니다.
+// --- 이 부분에 TouchableOpacity와 Text를 추가합니다 ---
+import {
+  View,
+  Alert,
+  TouchableOpacity,
+  Text,
+  ImageBackground,
+} from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
 import { useMissions } from '../context/MissionContext';
+import { PANORAMA_IMAGES } from '../data/images';
 import { styles } from '../styles/styles';
 
 type CustomMarkedDates = {
@@ -16,10 +23,52 @@ type CustomMarkedDates = {
   };
 };
 
-function CalendarScreen() {
-  const { missions, resetToday } = useMissions();
+interface CustomDayProps {
+  date?: DateData;
+  state?: 'today' | 'disabled' | 'selected' | 'inactive' | '';
+  marking?: {
+    selected?: boolean;
+    marked?: boolean;
+  };
+  onPress?: (date: DateData) => void;
+}
 
-  // --- 제가 이전에 실수로 생략했던 부분입니다 ---
+const CustomDay = ({ date, state, marking, onPress }: CustomDayProps) => {
+  const isSelected = marking?.selected;
+  const hasDiary = marking?.marked;
+
+  const containerStyle = [
+    styles.dayContainer,
+    isSelected ? styles.selectedDayContainer : {},
+  ];
+
+  const dayOfWeek = date ? new Date(date.dateString).getDay() : -1;
+
+  const textStyle = [
+    styles.dayText,
+    dayOfWeek === 6 ? styles.saturdayText : {},
+    dayOfWeek === 0 ? styles.sundayText : {},
+    state === 'today' ? styles.todayText : {},
+    isSelected ? styles.selectedDayText : {},
+    state === 'disabled' || state === 'inactive' ? styles.disabledDayText : {},
+  ];
+
+  return (
+    <TouchableOpacity
+      onPress={() => date && onPress && onPress(date)}
+      style={containerStyle}
+    >
+      <Text style={textStyle}>{date?.day}</Text>
+      {hasDiary && <View style={styles.diaryDot} />}
+    </TouchableOpacity>
+  );
+};
+
+function CalendarScreen() {
+  const { missions } = useMissions();
+
+  const backgroundImage = PANORAMA_IMAGES[new Date().getDay()].left;
+
   const markedDates = Object.keys(missions).reduce((acc, date) => {
     const missionData = missions[date];
     if (missionData.completed) {
@@ -45,28 +94,29 @@ function CalendarScreen() {
       Alert.alert(day.dateString, '이 날은 기록이 없어요.');
     }
   };
-  // --- 여기까지 입니다 ---
-
-  const handleReset = () => {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const today = `${year}-${month}-${day}`;
-
-    resetToday(today);
-    Alert.alert('초기화 완료', '오늘의 모든 기록이 삭제되었습니다.');
-  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: 'white' }}>
-      <View style={{ paddingTop: 50 }}>
-        <Calendar markedDates={markedDates} onDayPress={handleDayPress} />
+    <View style={styles.homeContainer}>
+      <ImageBackground
+        source={backgroundImage}
+        style={styles.backgroundImageFullScreen}
+      />
+      <View style={styles.calendarContainer}>
+        <Calendar
+          markedDates={markedDates}
+          onDayPress={handleDayPress}
+          dayComponent={CustomDay}
+          theme={{
+            backgroundColor: 'transparent',
+            calendarBackground: 'transparent',
+            arrowColor: 'white',
+            monthTextColor: 'white',
+            textMonthFontWeight: 'bold',
+            textMonthFontSize: 18,
+            textSectionTitleColor: 'rgba(255, 255, 255, 0.8)',
+          }}
+        />
       </View>
-
-      <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-        <Text style={{ fontSize: 24 }}>🔄</Text>
-      </TouchableOpacity>
     </View>
   );
 }
