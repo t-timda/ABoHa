@@ -1,11 +1,12 @@
 // App.tsx
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { SafeAreaView, View } from 'react-native';
 import { MissionProvider } from './src/context/MissionContext';
 import AppNavigator from './src/navigation/AppNavigator';
 import { LocaleConfig } from 'react-native-calendars';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
+import RNBootSplash from 'react-native-bootsplash';
 
 // 달력 한글 설정
 LocaleConfig.locales['kr'] = {
@@ -55,6 +56,10 @@ LocaleConfig.defaultLocale = 'kr';
 const adUnitId = 'ca-app-pub-4780520831029688/3625246124';
 
 function App(): React.JSX.Element {
+  useEffect(() => {
+    // 데이터 로딩이 끝나고 네비게이터가 준비되면 로딩 화면을 숨깁니다.
+    RNBootSplash.hide({ fade: true });
+  }, []);
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
